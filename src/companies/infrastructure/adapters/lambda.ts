@@ -18,6 +18,7 @@ export class AWSLambdaAdapter implements IAwsLambda {
       const result = Buffer.from(Payload!).toString();
       const logs = Buffer.from(LogResult!, 'base64').toString();
       return {
+        LambdaName: options.functionName,
         statusCode: StatusCode,
         result,
         logs,
