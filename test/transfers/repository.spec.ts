@@ -98,14 +98,15 @@ describe('TransferRepository.findAllTransfers', () => {
   });
 
   it('devuelve primera página DESC por createdAt, limit=2 y nextCursor', async () => {
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T11:00:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T11:00:00.000Z').toISOString();
     const res = await repo.findAllTransfers({
       from,
       to,
       limit: 2,
       orderField: 'createdAt',
       sortBy: 'DESC',
+      cursor: undefined,
     });
 
     expect(res.items).toHaveLength(2);
@@ -121,8 +122,8 @@ describe('TransferRepository.findAllTransfers', () => {
   });
 
   it('segunda página con cursor no duplica y trae las siguientes', async () => {
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T11:00:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T11:00:00.000Z').toISOString();
 
     // 1ra página
     const p1 = await repo.findAllTransfers({
@@ -131,6 +132,7 @@ describe('TransferRepository.findAllTransfers', () => {
       limit: 2,
       orderField: 'createdAt',
       sortBy: 'DESC',
+      cursor: undefined,
     });
 
     // 2da página con cursor de p1
@@ -176,8 +178,8 @@ describe('TransferRepository.findAllTransfers', () => {
   });
 
   it('funciona con orderField=amount_minor ASC', async () => {
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T11:00:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T11:00:00.000Z').toISOString();
 
     const p1 = await repo.findAllTransfers({
       from,
@@ -205,11 +207,12 @@ describe('TransferRepository.findAllTransfers', () => {
   it('respeta el rango from/to', async () => {
     // rango que solo incluye minutos 2..4
     const res = await repo.findAllTransfers({
-      from: new Date('2025-09-10T10:02:00.000Z'),
-      to: new Date('2025-09-10T10:04:00.000Z'),
+      from: new Date('2025-09-10T10:02:00.000Z').toISOString(),
+      to: new Date('2025-09-10T10:04:00.000Z').toISOString(),
       limit: 10,
       orderField: 'createdAt',
       sortBy: 'ASC',
+      cursor: undefined,
     });
 
     expect(res.items.map((i) => new Date(i.createdAt).toISOString())).toEqual([
@@ -237,8 +240,8 @@ describe('TransferRepository.findAllTransfers', () => {
       ),
     );
 
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T11:00:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T11:00:00.000Z').toISOString();
 
     // ordenamos por amount_minor ASC, limit=2, drenamos todo
     const all = await drainAllPages(async (cursor?: string) =>
@@ -262,8 +265,8 @@ describe('TransferRepository.findAllTransfers', () => {
     expect(ids).toEqual(idsSorted);
   });
   it('limit=1 pagina uno por uno sin perder elementos', async () => {
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T11:00:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T11:00:00.000Z').toISOString();
 
     const all = await drainAllPages((cursor) =>
       repo.findAllTransfers({
@@ -283,8 +286,8 @@ describe('TransferRepository.findAllTransfers', () => {
   });
 
   it('limit mayor al total devuelve todo en una sola página', async () => {
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T11:00:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T11:00:00.000Z').toISOString();
 
     const res = await repo.findAllTransfers({
       from,
@@ -292,13 +295,14 @@ describe('TransferRepository.findAllTransfers', () => {
       limit: 1000,
       orderField: 'createdAt',
       sortBy: 'ASC',
+      cursor: undefined,
     });
     expect(res.hasNextPage).toBe(false);
     expect(res.cursor).toBeUndefined();
   });
   it('cursor malformado se trata como primera página (no rompe)', async () => {
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T10:05:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T10:05:00.000Z').toISOString();
 
     // cursor inválido
     const bad = 'not-base64-or-json';
@@ -321,8 +325,8 @@ describe('TransferRepository.findAllTransfers', () => {
     );
   });
   it('cursor apunta al último ítem y la siguiente página no lo repite', async () => {
-    const from = new Date('2025-09-10T10:00:00.000Z');
-    const to = new Date('2025-09-10T11:00:00.000Z');
+    const from = new Date('2025-09-10T10:00:00.000Z').toISOString();
+    const to = new Date('2025-09-10T11:00:00.000Z').toISOString();
 
     const p1 = await repo.findAllTransfers({
       from,
@@ -330,6 +334,7 @@ describe('TransferRepository.findAllTransfers', () => {
       limit: 2,
       orderField: 'createdAt',
       sortBy: 'ASC',
+      cursor: undefined,
     });
     const lastP1 = p1.items[p1.items.length - 1];
 

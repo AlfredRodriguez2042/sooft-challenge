@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, Raw, Repository } from 'typeorm';
 import { isValidBase64 } from 'zod/v4/core';
-import { TransfersQuery } from '../../application/dtos/transfer';
 import { TransferEntity } from '../../domain/entities/transfers';
-import { ITransferRepository } from '../../domain/ports/transfer';
+import {
+  ITransferRepository,
+  QueryPagination,
+} from '../../domain/ports/transfer';
 type Cursor = { v: string | number; id: string | number };
 export const encodeCursor = (c: Cursor) =>
   Buffer.from(JSON.stringify(c)).toString('base64');
@@ -34,7 +36,7 @@ export class TransferRepository implements ITransferRepository {
   async create(company: Partial<TransferEntity>) {
     return await this.repository.save(this.repository.create(company));
   }
-  async findAllTransfers(query: TransfersQuery) {
+  async findAllTransfers(query: QueryPagination) {
     const limit = +query.limit;
     const params: Record<string, any> = {
       from: new Date(query.from),

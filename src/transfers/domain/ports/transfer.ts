@@ -8,12 +8,20 @@ export interface QueryPagination {
   limit: number;
 }
 export interface ITransferRepository {
-  findAllTransfers: (query: QueryPagination) => Promise<TransferEntity[]>;
+  findAllTransfers: (query: QueryPagination) => Promise<{
+    items: TransferEntity[];
+    cursor: string | undefined;
+    hasNextPage: boolean;
+  }>;
   create: (input: Partial<TransferEntity>) => Promise<any>;
 }
 export interface ITransferService {
-  findAll: (query) => Promise<any[]>;
-  create: (input: Partial<TransferEntity>) => Promise<any>;
+  findAll: (query) => Promise<{
+    items: TransferEntity[];
+    cursor: string | undefined;
+    hasNextPage: boolean;
+  }>;
+  create: (input: Partial<TransferEntity>) => Promise<TransferEntity>;
 }
 export const TRANSFER_REPOSITORY = Symbol('TRANSFER_REPOSITORY');
 export const TRANSFER_SERVICE = Symbol('TRANSFER_SERVICE');

@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import {
   CreateTransferDto,
   TransfersQuery,
@@ -31,7 +32,7 @@ export class TransferController {
     private readonly transferService: ITransferService,
   ) {}
 
-  @Get('companies')
+  @Get()
   @ApiOperation({
     summary: 'List transfers',
     description:
@@ -66,7 +67,7 @@ export class TransferController {
     type: String,
     format: 'date-time',
     required: true,
-    example: '2025-09-10T23:59:59Z',
+    example: '2025-09-30T23:59:59Z',
   })
   @ApiQuery({
     name: 'orderField',
@@ -76,7 +77,7 @@ export class TransferController {
   @ApiQuery({
     name: 'sortBy',
     enum: ['ASC', 'DESC'],
-    required: false,
+    required: true,
     example: 'DESC',
   })
   @ApiQuery({
@@ -96,6 +97,8 @@ export class TransferController {
     const result = this.transferService.findAll(query);
     return result;
   }
+
+  @Throttle({ default: { limit: 5, ttl: 1000 } })
   @Post()
   @HttpCode(201)
   @ApiOperation({ summary: 'Crear transferencia entre cuentas de empresas' })
@@ -132,6 +135,6 @@ export class TransferController {
     },
   })
   async create(@Body() dto: CreateTransferDto) {
-    await this.transferService.create(dto);
+    return await this.transferService.create(dto);
   }
 }

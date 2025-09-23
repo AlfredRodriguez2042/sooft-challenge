@@ -28,7 +28,7 @@ export class TransferService implements ITransferService {
     );
     const res = await this.repository.findAllTransfers(query);
     this.logger.log(
-      `Found ${res?.length ?? 0} transfers ( limit=${query.limit})`,
+      `Found ${res?.items.length ?? 0} transfers ( limit=${query.limit})`,
     );
     return res;
   }
@@ -36,7 +36,7 @@ export class TransferService implements ITransferService {
     this.logger.debug(`Init create transfer payload: ${JSON.stringify(input)}`);
     const amountMinor = parseAmountToMinor(String(input.amount), 2);
     this.logger.debug(`parsed amountMinor: ${amountMinor}`);
-    return this.transactionalRepository.withTransaction(
+    return await this.transactionalRepository.withTransaction(
       'SERIALIZABLE',
       async (repo) => {
         if (input.idempotencyKey) {
