@@ -120,6 +120,7 @@ NEST_AWS_ENDPOINT_URL=
 NEST_AWS_MAX_ATTEMPTS=3
 NEST_AWS_ACCESS_KEY_ID=
 NEST_AWS_SECRET_ACCESS_KEY=
+NEST_ENV=develop
 ```
 
 ### 3) Instalación y scripts
@@ -209,6 +210,8 @@ Beneficios:
 ## 🧪 Pruebas
 
 - Ejemplo base: `app.controller.spec.ts`.
+- Los modulos se testean en /test/<modulo>/integration/<file> y /test/<modulo>/unit/<file> y los e2e /test/<modulo>/<file>
+- En este caso solo se hacen test de la capa aplicacion y los servicios orquestadores como test unitarios
 - Recomendado:
   - **Unit tests** en `domain` y `application` (mocks de ports).
   - **Integration tests** en `infrastructure` (repos reales contra SQLite/DB de test).
@@ -231,6 +234,49 @@ pnpm test:e2e      # si agregas e2e con supertest
 5. **Tests**: unit + integration.
 
 > Tip: mantén DTOs minimalistas y _mapea_ a entidades en los servicios de aplicación.
+
+---
+
+## Despliegue en Lambda (referencia)
+
+Repositorio de ejemplo para Serverless Framework + DynamoDB con single-table design. Incluye serverless.yaml, TypeScript, seeds y tooling (bun/esbuild) para un servicio mínimo en API Gateway + DynamoDB. Útil como base para integrar un provider DynamoDB en producción y mantener SQLite en dev.
+link: https://github.com/AlfredRodriguez2042/single-table
+
+> Nota: este repo es referencia. La integración aquí se limita a enlazar el serverless.yaml y el patrón de acceso (single-table). Ajustar nombres de tablas, IAM y variables de entorno antes de desplegar
+
+> servicio de lambda interno: se habia implementado un servicio de lambda interno
+
+```ts
+export class AWSLambdaAdapter implements IAwsLambda {
+  constructor(private readonly client: LambdaClient) {}
+  async invoke(options: InvokeOptions) {
+    const command = new InvokeCommand({
+      FunctionName: options.functionName,
+      InvocationType: options.invocationType ?? 'RequestResponse',
+      LogType: options.logType ?? 'None',
+      Payload: JSON.stringify(options.payload),
+    });
+    try {
+      const { LogResult, Payload, StatusCode } =
+        await this.client.send(command);
+      const result = Buffer.from(Payload!).toString();
+      const logs = Buffer.from(LogResult!, 'base64').toString();
+      return {
+        LambdaName: options.functionName,
+        statusCode: StatusCode,
+        result,
+        logs,
+      };
+    } catch {
+      return {
+        statusCode: 500,
+        result: '',
+        logs: '',
+      };
+    }
+  }
+}
+```
 
 ---
 
