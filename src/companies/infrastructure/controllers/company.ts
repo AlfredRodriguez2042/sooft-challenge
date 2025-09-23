@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import {
   CreateCompanyDto,
   CreateCompanySchema,
@@ -35,6 +36,8 @@ export class CompanyController {
     @Inject(AWS_LAMBDA_SERVICE)
     private readonly awsLambdaService: ILambdaClientService,
   ) {}
+
+  @Throttle({ default: { limit: 2, ttl: 30000 } })
   @Post()
   @HttpCode(201)
   @ApiOperation({ summary: 'Create a company (PYME or CORPORATE)' })
@@ -78,10 +81,10 @@ export class CompanyController {
   async create(
     @Body(new ZodValidationPipe(CreateCompanySchema)) payload: CreateCompanyDto,
   ) {
-    this.awsLambdaService
-      .execute(payload)
-      .then((res) => console.log(res))
-      .catch((err) => console.log(err));
+    // this.awsLambdaService
+    //   .execute(payload)
+    //   .then((res) => console.log(res))
+    //   .catch((err) => console.log(err));
     return await this.companyService.create(payload);
   }
 
