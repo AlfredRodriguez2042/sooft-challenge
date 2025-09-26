@@ -4,14 +4,15 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { parseAmountToMinor } from 'src/shared/utils/parseAmountToMinor';
-import { ITransferService } from 'src/transfers/domain/ports/transfer';
-import { UnitOfWork } from 'src/transfers/infrastructure/repositories/unitOfWork';
+import { parseAmountToMinor } from '../../../shared/utils/parseAmountToMinor';
+import { ITransferService } from '../../../transfers/domain/ports/transfer';
+import { UnitOfWork } from '../../../transfers/infrastructure/repositories/unitOfWork';
 import { QueryPagination } from '../../domain/ports/transfer';
 import { CreateTransferDto } from '../dtos/transfer';
 import {
   ITransferRepository,
   TRANSFER_REPOSITORY,
+  TRANSFER_REPOSITORY_UOW,
 } from './../../domain/ports/transfer';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class TransferService implements ITransferService {
   constructor(
     @Inject(TRANSFER_REPOSITORY)
     private readonly repository: ITransferRepository,
+    @Inject(TRANSFER_REPOSITORY_UOW)
     private readonly transactionalRepository: UnitOfWork,
   ) {}
   async findAll(query: QueryPagination) {
@@ -80,52 +82,41 @@ export class TransferService implements ITransferService {
           throw new BadRequestException('Moneda incompatible');
         }
         this.logger.debug(`Debiting account ${input.debitAccountId}`);
-        const debitRes: any[] = await repo.balanceRepo.query(
-          `UPDATE balance
-           SET balance_minor = balance_minor - ?
-         WHERE id = ?
-           AND active = 1
-           AND currency = ?
-           AND balance_minor >= ?
-         RETURNING id`,
-          [amountMinor, input.debitAccountId, input.currency, amountMinor],
+        const debitRes = await repo.balanceRepo.debitIfSufficient(
+          input.debitAccountId,
+          amountMinor,
+          input.currency,
         );
-        if (debitRes.length !== 1) {
+        if (!debitRes) {
           this.logger.warn(`Debit failed for account ${input.debitAccountId}`);
           throw new BadRequestException(
             'Saldo insuficiente o cuenta débito inválida',
           );
         }
         this.logger.debug(`Crediting account ${input.creditAccountId}`);
-        const creditRes: any[] = await repo.balanceRepo.query(
-          `UPDATE balance
-           SET balance_minor = balance_minor + ?
-         WHERE id = ?
-           AND active = 1
-           AND currency = ?
-         RETURNING id`,
-          [amountMinor, input.creditAccountId, input.currency],
+        const creditRes = await repo.balanceRepo.creditIfActive(
+          input.creditAccountId,
+          amountMinor,
+          input.currency,
         );
-        if (creditRes.length !== 1) {
+        if (!creditRes) {
           this.logger.warn(
             `Credit failed for account ${input.creditAccountId}`,
           );
           throw new BadRequestException('Cuenta crédito inválida');
         }
         this.logger.debug(`Saving transfer entity`);
-        const transfer = await repo.transfersRepo.save(
-          repo.transfersRepo.create({
-            debitAccountId: input.debitAccountId,
-            creditAccountId: input.creditAccountId,
-            debitCompanyId: debitAccount.companyId,
-            creditCompanyId: creditAccount.companyId,
-            currency: input.currency,
-            amount_minor: amountMinor,
-            status: 'PENDING',
-            idempotencyKey: input.idempotencyKey ?? null,
-            metadata: input.metadata ?? null,
-          }),
-        );
+        const transfer = await repo.transfersRepo.create({
+          debitAccountId: input.debitAccountId,
+          creditAccountId: input.creditAccountId,
+          debitCompanyId: debitAccount.companyId,
+          creditCompanyId: creditAccount.companyId,
+          currency: input.currency,
+          amount_minor: amountMinor,
+          status: 'PENDING',
+          idempotencyKey: input.idempotencyKey ?? null,
+          metadata: input.metadata ?? null,
+        });
         this.logger.debug(`Writing ledger entries for transfer ${transfer.id}`);
         await repo.ledgerRepo.save(
           repo.ledgerRepo.create([
@@ -146,10 +137,7 @@ export class TransferService implements ITransferService {
           ]),
         );
         this.logger.debug(`Updating transfer ${transfer.id} to COMPLETED`);
-        await repo.transfersRepo.update(
-          { id: transfer.id },
-          { status: 'COMPLETED' },
-        );
+        await repo.transfersRepo.update(transfer.id, { status: 'COMPLETED' });
         this.logger.log(
           `End create transfer success: ${JSON.stringify({ transferId: transfer.id, debit: transfer.debitAccountId, credit: transfer.creditAccountId, currency: transfer.currency, amount_minor: amountMinor })}`,
         );

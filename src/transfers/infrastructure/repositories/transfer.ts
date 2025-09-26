@@ -6,6 +6,7 @@ import { TransferEntity } from '../../domain/entities/transfers';
 import {
   ITransferRepository,
   QueryPagination,
+  TransferRecord,
 } from '../../domain/ports/transfer';
 type Cursor = { v: string | number; id: string | number };
 export const encodeCursor = (c: Cursor) =>
@@ -19,7 +20,9 @@ const cursorParsers: Record<
   createdAt: (v) => new Date(v),
   amount_minor: (v) => Number(v),
 };
-
+export type FindCondition<T> = {
+  [P in keyof T]?: T[P];
+};
 export const parseCursorValue = (field: string, v: string | number) => {
   const parser = cursorParsers[field];
   return parser ? parser(v) : v;
@@ -30,6 +33,13 @@ export class TransferRepository implements ITransferRepository {
     @InjectRepository(TransferEntity)
     private readonly repository: Repository<TransferEntity>,
   ) {}
+  // findOneBy: (input: Partial<TransferRecord>) => Promise<TransferRecord>;
+  findOneBy<T>(query: FindCondition<T>) {
+    return this.repository.findOneBy(query as any);
+  }
+  async update(id: string, input: Partial<TransferRecord>) {
+    await this.repository.update({ id }, input);
+  }
   async findAll(query: FindManyOptions) {
     return await this.repository.find(query);
   }

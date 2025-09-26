@@ -15,19 +15,16 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { ZodValidationPipe } from '../../../shared/pipes/zodValidation';
 import {
   CreateCompanyDto,
   CreateCompanySchema,
-} from 'src/companies/application/dtos/company';
-import {
-  COMPANY_SERVICE,
-  ICompanyService,
-} from 'src/companies/domain/ports/company';
+} from '../../application/dtos/company';
+import { COMPANY_SERVICE, ICompanyService } from '../../domain/ports/company';
 import {
   AWS_LAMBDA_SERVICE,
   ILambdaClientService,
-} from 'src/companies/domain/ports/lambda';
-import { ZodValidationPipe } from 'src/shared/pipes/zodValidation';
+} from '../../domain/ports/lambda';
 
 @Controller('companies')
 export class CompanyController {

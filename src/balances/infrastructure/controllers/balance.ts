@@ -1,15 +1,12 @@
 import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ApiBody, ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
+import { ZodValidationPipe } from '../../../shared/pipes/zodValidation';
 import {
   CreateBalanceDto,
   createBalanceSchema,
   CreateBalanceSwaggerDto,
-} from 'src/balances/application/dtos/balance';
-import {
-  BALANCE_SERVICE,
-  IBalanceService,
-} from 'src/balances/domain/ports/balance';
-import { ZodValidationPipe } from 'src/shared/pipes/zodValidation';
+} from '../../application/dtos/balance';
+import { BALANCE_SERVICE, IBalanceService } from '../../domain/ports/balance';
 
 @Controller('balances')
 export class BalancesController {

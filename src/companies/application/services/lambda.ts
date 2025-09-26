@@ -3,7 +3,7 @@ import {
   AWS_LAMBDA_ADAPTER,
   IAwsLambda,
   ILambdaClientService,
-} from 'src/companies/domain/ports/lambda';
+} from '../../domain/ports/lambda';
 import { CreateCompanyDto } from '../dtos/company';
 
 @Injectable()

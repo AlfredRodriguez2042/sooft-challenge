@@ -4,7 +4,7 @@ import {
   ICompanyRepository,
   ICompanyService,
   QueryPagination,
-} from 'src/companies/domain/ports/company';
+} from '../../domain/ports/company';
 import { CreateCompanyDto } from '../dtos/company';
 
 @Injectable()

@@ -17,13 +17,16 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import {
   CreateTransferDto,
+  CreateTransferSchema,
   TransfersQuery,
-} from 'src/transfers/application/dtos/transfer';
+  TransfersQuerySchema,
+} from '../../application/dtos/transfer';
 
+import { ZodValidationPipe } from '../../../shared/pipes/zodValidation';
 import {
   ITransferService,
   TRANSFER_SERVICE,
-} from 'src/transfers/domain/ports/transfer';
+} from '../../domain/ports/transfer';
 
 @Controller('transfers')
 export class TransferController {
@@ -93,12 +96,14 @@ export class TransferController {
     description: 'Cursor opaco para paginación',
     example: 'eyJ2Ijoi2025LTA5LTEwVDEwOjE1OjAwWiIsImlkIjoxfQ==',
   })
-  async transfers(@Query() query: TransfersQuery) {
+  async transfers(
+    @Query(new ZodValidationPipe(TransfersQuerySchema)) query: TransfersQuery,
+  ) {
     const result = this.transferService.findAll(query);
     return result;
   }
 
-  @Throttle({ default: { limit: 5, ttl: 1000 } })
+  @Throttle({ default: { limit: 10, ttl: 1000 } })
   @Post()
   @HttpCode(201)
   @ApiOperation({ summary: 'Crear transferencia entre cuentas de empresas' })
@@ -134,7 +139,9 @@ export class TransferController {
       },
     },
   })
-  async create(@Body() dto: CreateTransferDto) {
+  async create(
+    @Body(new ZodValidationPipe(CreateTransferSchema)) dto: CreateTransferDto,
+  ) {
     return await this.transferService.create(dto);
   }
 }

@@ -1,18 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
 
-import { BalanceEntity } from 'src/balances/domain/entities/balance';
-import { CompanyEntity } from 'src/companies/domain/entities/company';
-import { LedgerEntryEntity } from 'src/transfers/domain/entities/ledger';
-import { TransferEntity } from 'src/transfers/domain/entities/transfers';
+import { BalanceEntity } from '../../../balances/infrastructure/persistence/entities/balance';
+import { BalanceRepository } from '../../../balances/infrastructure/repositories/balance';
+import { CompanyEntity } from '../../../companies/domain/entities/company';
+import { LedgerEntryEntity } from '../../../transfers/domain/entities/ledger';
+import { TransferEntity } from '../../../transfers/domain/entities/transfers';
+import { Repositories } from '../../domain/ports/transfer';
+import { TransferRepository } from './transfer';
 
-interface Repositories {
-  balanceRepo: Repository<BalanceEntity>;
-  companiesRepo: Repository<CompanyEntity>;
-  transfersRepo: Repository<TransferEntity>;
-  ledgerRepo: Repository<LedgerEntryEntity>;
-}
 @Injectable()
 export class UnitOfWork {
   constructor(private readonly ds: DataSource) {}
@@ -28,11 +25,14 @@ export class UnitOfWork {
   }
 
   private repoFactory(manager: import('typeorm').EntityManager) {
-    const balanceRepo = manager.getRepository(BalanceEntity);
+    const balanceRepo = new BalanceRepository(
+      manager.getRepository(BalanceEntity),
+    );
     const companiesRepo = manager.getRepository(CompanyEntity);
-    const transfersRepo = manager.getRepository(TransferEntity);
+    const transfersRepo = new TransferRepository(
+      manager.getRepository(TransferEntity),
+    );
     const ledgerRepo = manager.getRepository(LedgerEntryEntity);
-
     return { balanceRepo, companiesRepo, transfersRepo, ledgerRepo };
   }
 }

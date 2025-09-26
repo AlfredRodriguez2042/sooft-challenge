@@ -1,8 +1,8 @@
-import { BalanceEntity } from 'src/balances/domain/entities/balance';
-import { CompanyEntity } from 'src/companies/domain/entities/company';
-import { LedgerEntryEntity } from 'src/transfers/domain/entities/ledger';
-import { TransferEntity } from 'src/transfers/domain/entities/transfers';
 import { DataSourceOptions } from 'typeorm';
+import { BalanceEntity } from '../../../balances/infrastructure/persistence/entities/balance';
+import { CompanyEntity } from '../../../companies/domain/entities/company';
+import { LedgerEntryEntity } from '../../../transfers/domain/entities/ledger';
+import { TransferEntity } from '../../../transfers/domain/entities/transfers';
 
 export const sqliteDataSource: DataSourceOptions = {
   type: 'better-sqlite3',
