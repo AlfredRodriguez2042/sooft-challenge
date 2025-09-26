@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
-import { BalanceEntity } from '../../src/balances/domain/entities/balance';
-import { BalanceRepository } from '../../src/balances/infrastructure/repositories/balance';
+import { BalanceEntity } from '../../../src/balances/infrastructure/persistence/entities/balance';
+import { BalanceRepository } from '../../../src/balances/infrastructure/repositories/balance';
 
 type MockType<T> = {
   [P in keyof T]?: jest.Mock<ReturnType<any>, Parameters<any>>;

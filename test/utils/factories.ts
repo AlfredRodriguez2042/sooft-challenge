@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { BalanceEntity } from '../../src/balances/domain/entities/balance';
+import { BalanceEntity } from '../../src/balances/infrastructure/persistence/entities/balance';
 import { CompanyEntity } from '../../src/companies/domain/entities/company';
 import { TransferEntity } from '../../src/transfers/domain/entities/transfers';
 interface Company {
